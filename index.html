@@ -1,0 +1,73 @@
+<!doctype html>
+<html>
+  <head>
+    <title>Socket.IO chat</title>
+    <style>
+      * { margin: 0; padding: 0; box-sizing: border-box; }
+      body { font: 13px Helvetica, Arial; }
+
+      p { position: fixed; bottom: 80px; padding: 10px; }
+
+      #nickname { background: #000; padding: 3px; position: fixed; bottom: 39px; width: 100%; }
+      #nickname input { border: 0; padding: 10px; width: 90%; margin-right: .5%; }
+      #nickname button { width: 9%; background: rgb(130, 224, 255); border: none; padding: 10px; }
+
+      #message { background: #000; padding: 3px; position: fixed; bottom: 0; width: 100%; }
+      #message input { border: 0; padding: 10px; width: 90%; margin-right: .5%; }
+      #message button { width: 9%; background: rgb(130, 224, 255); border: none; padding: 10px; }
+      #messages { list-style-type: none; margin: 0; padding: 0; }
+      #messages li { padding: 5px 10px; }
+      #messages li:nth-child(odd) { background: #eee; }
+    </style>
+  </head>
+  <body>
+
+    <ul id="messages"></ul>
+
+    <p></p>
+
+    <form id="nickname">
+      <input id="name" placeholder="Add a nickname" /><button>Save</button>
+    </form>
+
+    <form id="message">
+      <input id="m" placeholder="enter a message" autocomplete="off" /><button>Send</button>
+    </form>
+
+    <script src="/socket.io/socket.io.js"></script>
+    <script src="https://code.jquery.com/jquery-1.11.1.js"></script>
+    <script>
+      $(() => {
+        var socket = io();
+        
+        $('#nickname').submit(event => {
+          event.preventDefault();
+          socket.nickname = $('#name').val();
+          $('#messages').append($('<li>').text(`Nickname saved as ${socket.nickname}`));
+
+        })
+
+        $('#message').submit(() => {
+          socket.emit('chat message', `${socket.nickname || 'Anonymous'}: ${$('#m').val()}`);
+          $('#m').val('');
+          return false;
+        });
+
+        $('#m').on('keydown', () => {
+          socket.emit('typing', `${socket.nickname || 'Anonymous'} is typing...`)
+        })
+
+        socket.on('typing message', msg => {
+          $('p').text(msg)
+          setTimeout(() => {
+            $('p').text('')
+          }, 1000)
+        })
+
+        socket.on('chat message', msg => {
+          $('#messages').append($('<li>').text(msg));
+        })
+      });
+    </script>
+  </body>
+</html>
